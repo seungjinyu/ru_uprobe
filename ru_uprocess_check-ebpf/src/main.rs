@@ -3,7 +3,7 @@
 
 use aya_ebpf::{
     macros::uprobe,
-    programs::ProbeContext,
+    programs::ProbeContext, EbpfContext,
 };
 use aya_log_ebpf::info;
 
@@ -16,11 +16,14 @@ pub fn ru_uprocess_check(ctx: ProbeContext) -> u32 {
 }
 
 fn try_ru_uprocess_check(ctx: ProbeContext) -> Result<u32, u32> {
-    info!(&ctx, "function getaddrinfo called by libc");
+    info!(&ctx, "function add_rust_aya called");
+    info!(&ctx, "pid : {} ",ctx.pid());
+
     Ok(0)
 }
 
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
+    
     unsafe { core::hint::unreachable_unchecked() }
 }

@@ -4,6 +4,8 @@ use aya_log::BpfLogger;
 use clap::Parser;
 use log::{info, warn, debug};
 use tokio::signal;
+use std::borrow::Borrow;
+use std::env;
 
 #[derive(Debug, Parser)]
 struct Opt {
@@ -44,13 +46,30 @@ async fn main() -> Result<(), anyhow::Error> {
         // This can happen if you remove all log statements from your eBPF program.
         warn!("failed to initialize eBPF logger: {}", e);
     }
+
+    let current_dir = env::current_dir();
+    let execfile : String = String::from("example");
+    
+
+    let attach = match current_dir {
+        Ok(mut path) =>{
+            path.push(execfile);
+            path.to_str().unwrap().to_string()
+        }, 
+        Err(e ) => String::from("NONE"),
+    };
+        
     let program: &mut UProbe = bpf.program_mut("ru_uprocess_check").unwrap().try_into()?;
+
     program.load()?;
-    program.attach(Some("getaddrinfo"), 0, "libc", opt.pid)?;
+    program.attach(Some("add_rust_aya"), 0, &attach, opt.pid)?;
 
     info!("Waiting for Ctrl-C...");
     signal::ctrl_c().await?;
     info!("Exiting...");
 
     Ok(())
+    
+    
+
 }
